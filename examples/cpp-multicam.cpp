@@ -150,6 +150,7 @@ int main(int argc, char * argv[]) try
             }
             else{
                 object_relativity_meter = 5.0;
+                alert = thread(beepFreq, "200");
             }
           
             glBegin(GL_LINES);
