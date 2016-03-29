@@ -4,10 +4,10 @@
 #include "example.hpp"
 #include <librealsense/rs.h>
 #include <librealsense/rsutil.h>
-
+#include <thread>
 #include <iostream>
 #include <algorithm>
-
+using namespace std;
 std::vector<texture_buffer> buffers;
 
 void beepFreq(const char* freq){
@@ -23,6 +23,7 @@ void beepFreq(const char* freq){
 
 int main(int argc, char * argv[]) try
 {
+    thread alert;
     rs::log_to_console(rs::log_severity::warn);
     //rs::log_to_file(rs::log_severity::debug, "librealsense.log");
     
@@ -129,28 +130,28 @@ int main(int argc, char * argv[]) try
             float object_relativity_meter = 0;
             if(closest_object > 0.5 && closest_object < 1){
                 object_relativity_meter = CLOSEST_MULTIPLIER;
-                beepFreq("700");
+                alert = thread(beepFreq, "700");
             }
             else if(closest_object > 1 && closest_object < 2){
                 object_relativity_meter =  closest_object * IMMEDIATE_MULTIPLIER;
-                beepFreq("500");
+                alert = thread(beepFreq, "500");
             }
             else if(closest_object > 2 && closest_object < 3){
                 object_relativity_meter =  closest_object * ARM_LENGTH_MULTIPLIER;
-                beepFreq("400");
+                alert = thread(beepFreq, "400");
             }
             else if(closest_object > 4 && closest_object < 5){
                 object_relativity_meter = closest_object * FOOT_STEPS_AHEAD_MULTIPLIER;
-                beepFreq("300");
+                alert = thread(beepFreq, "300");
             }
             else if(closest_object >= 5){
                 object_relativity_meter = closest_object * FOOT_STEPS_AHEAD_MULTIPLIER;
-                beepFreq("200");
-                
+                alert = thread(beepFreq, "200");
             }
             else{
                 object_relativity_meter = 5.0;
             }
+          
             glBegin(GL_LINES);
             glVertex3f(5.00f, perTextureHeight - 5.00f, 0.0f); // origin of the FIRST line
             glVertex3f(5.00f, closest_object * 100.00f, 0.0f); // ending point of the FIRST line
@@ -159,9 +160,10 @@ int main(int argc, char * argv[]) try
             glVertex3f(7.00f, perTextureHeight - 5.00f, 0.0f); // origin of the SECOND line
             glVertex3f(7.00f, closest_object * 10000.00f, 0.0f); // ending point of the SECOND line
             glEnd( );
-            
             glPopMatrix();
             glfwSwapBuffers(win);
+            
+            alert.join();
         }
         
         glfwDestroyWindow(win);
